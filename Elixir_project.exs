@@ -195,6 +195,45 @@ defmodule Poker do
     end
   end
 
+  def threeKind(hand) do
+    hand1 = Enum.map(hand, fn(n) -> rem(n, 13) end)
+    temp1 = Enum.frequencies(hand1)
+    key_list = Map.keys(temp1)
+    res = tkr(temp1, key_list, [])
+    res = Enum.uniq(Enum.sort(res))
+    if Enum.at(res,0) == 1 && Enum.at(res,1) == 3 do
+      true
+    else
+      false
+    end
+  end
+
+  def tkr(_, [], res), do: res
+  def tkr(map, list, res) do
+    tkr(map, tl(list), res ++[map[hd(list)]])
+  end
+
+  def threeKindTie(hand1, hand2) do
+    hand11 = Enum.sort(hand1)
+    hand22 = Enum.sort(hand2)
+    hand11 = Enum.map(hand11, fn(n) -> rem(n, 13) end)
+    hand22 = Enum.map(hand22, fn(n) -> rem(n, 13) end)
+    hand11 = Enum.sort(hand11)
+    hand22 = Enum.sort(hand22)
+    hand22 = divFixer(hand22, [])
+    hand11 = divFixer(hand11, [])
+    temp1 = Enum.frequencies(hand11)
+    temp2 = Enum.frequencies(hand22)
+    temp3 =  Map.keys(temp1) ++ Map.keys(temp2)
+    res1 = Enum.uniq(tieLoop(temp1, temp3, [], 3))
+    res2 = Enum.uniq(tieLoop(temp2, temp3, [], 3))
+    if res1 > res2 do
+      1
+    else
+      2
+    end
+  end
+
   def repetitionDeleter([], _, out), do: out
   def repetitionDeleter(hand, elem, out) do
     if (hd(hand) == elem) do
