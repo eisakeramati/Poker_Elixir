@@ -122,6 +122,79 @@ defmodule Poker do
     end
   end
 
+  def flush(hand) do
+    hand = Enum.sort(hand)
+    cond do
+      Enum.at(hand, 0) > 0 && Enum.at(hand, 4) < 14 ->
+        true
+      Enum.at(hand, 0) > 13 && Enum.at(hand, 4) < 27 ->
+        true
+      Enum.at(hand, 0) > 26 && Enum.at(hand, 4) < 40 ->
+        true
+      Enum.at(hand, 0) > 39 && Enum.at(hand, 4) < 53 ->
+        true
+      true ->
+        false
+    end
+  end
+
+  def flushTie(hand1, hand2) do
+    hand11 = Enum.map(hand1, fn(n) -> rem(n, 13) end)
+    hand22 = Enum.map(hand2, fn(n) -> rem(n, 13) end)
+    hand22 = divFixer(hand22, [])
+    hand11 = divFixer(hand11, [])
+    hand11 = Enum.sort(hand11)
+    hand22 = Enum.sort(hand22)
+    cond do
+      List.last(hand11) > List.last(hand22) ->
+        1
+      List.last(hand11) < List.last(hand22) ->
+        2
+      true ->
+        hand1 = Enum.sort(hand1)
+        hand2 = Enum.sort(hand2)
+        if Enum.at(hand1, 4) > Enum.at(hand2, 4) do
+          1
+        else
+          2
+        end
+    end
+  end
+
+  def straight(hand) do
+    hand11 = Enum.map(hand, fn(n) -> rem(n, 13) end)
+    hand11 = divFixer(hand11, [])
+    hand11 = Enum.sort(hand11)
+    if Enum.at(hand11, 4) - Enum.at(hand11, 0) == 4 do
+      true
+    else
+      false
+    end
+  end
+
+  def straightTie(hand1, hand2) do
+    hand11 = Enum.map(hand1, fn(n) -> rem(n, 13) end)
+    hand11 = divFixer(hand11, [])
+    hand11 = Enum.sort(hand11)
+    hand22 = Enum.map(hand2, fn(n) -> rem(n, 13) end)
+    hand22 = divFixer(hand22, [])
+    hand22 = Enum.sort(hand22)
+    cond do
+      Enum.at(hand11, 4) > Enum.at(hand22, 4) ->
+        1
+      Enum.at(hand11, 4) < Enum.at(hand22, 4) ->
+        2
+      true ->
+        hand1 = Enum.sort_by(hand1, fn(n) -> rem(n,13) end)
+        hand2 = Enum.sort_by(hand2, fn(n) -> rem(n,13) end)
+        if Enum.at(hand1, 4) > Enum.at(hand2, 4) do
+          1
+        else
+          2
+        end
+    end
+  end
+
   def repetitionDeleter([], _, out), do: out
   def repetitionDeleter(hand, elem, out) do
     if (hd(hand) == elem) do
