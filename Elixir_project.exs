@@ -361,7 +361,39 @@ defmodule Poker do
             end
         end
     end
+  end
 
+  def highCard(hand1, hand2) do
+    hand11 = Enum.sort(hand1)
+    hand22 = Enum.sort(hand2)
+    hand11 = Enum.map(hand11, fn(n) -> rem(n, 13) end)
+    hand22 = Enum.map(hand22, fn(n) -> rem(n, 13) end)
+    hand11 = Enum.sort(hand11)
+    hand22 = Enum.sort(hand22)
+    hand22 = divFixer(hand22, [])
+    hand11 = divFixer(hand11, [])
+    hand111 = hand11 -- hand22
+    hand222 = hand22 -- hand11
+    hand111 = Enum.sort(hand111)
+    hand222 = Enum.sort(hand222)
+    cond do
+      length(hand111)!=0 ->
+        if List.last(hand111) > List.last(hand222) do
+          1
+        else
+          2
+        end
+      true->
+        t1 = Enum.filter(hand1, fn(n) -> rem(n,13)==rem(List.last(hand11), 13) end)
+        t2 = Enum.filter(hand2, fn(n) -> rem(n,13)==rem(List.last(hand11), 13) end)
+        t1 = Enum.sort(t1)
+        t2 = Enum.sort(t2)
+        if List.last(t1) > List.last(t2) do
+          1
+        else
+          2
+        end
+    end
   end
 
   def repetitionDeleter([], _, out), do: out
