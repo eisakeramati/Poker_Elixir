@@ -13,7 +13,7 @@ defmodule Poker do
 
   def royalFlush(hand) do
       hand = Enum.sort(hand)
-      if (Enum.at(hand, 4) - Enum.at(hand, 4) == 12) do
+      if (Enum.at(hand, 4) - Enum.at(hand, 0) == 12) do
         if rem((Enum.at(hand, 4)), 13) == 0 do
           if rem((Enum.at(hand, 3)), 13) == 12 do
             if rem((Enum.at(hand, 2)), 13) == 11 do
@@ -92,12 +92,15 @@ defmodule Poker do
   end
 
   def fourKind(hand) do
-    hand = Enum.sort(hand)
-    temp1 = Enum.uniq_by(hand, fn(n) -> rem(n, 13) end)
-    temp2 = Enum.map(hand, fn(n) -> rem(n, 13) end)
-    temp2 = repetitionDeleter(temp2, Enum.at(temp1, 0), [])
-    if length(temp2) == 4 || length(temp2) == 1 do
+    hand1 = Enum.map(hand, fn(n) -> rem(n, 13) end)
+    temp1 = Enum.frequencies(hand1)
+    key_list = Map.keys(temp1)
+    res = tkr(temp1, key_list, [])
+    res = Enum.uniq(Enum.sort(res))
+    if Enum.at(res,0) == 1 && Enum.at(res,1) == 4 do
       true
+    else
+      false
     end
   end
 
@@ -420,6 +423,249 @@ defmodule Poker do
       tieLoop(map1, tl(keys), res ++ [hd(keys)], num)
     else
       tieLoop(map1, tl(keys), res, num)
+    end
+  end
+
+  def deal(list) do
+    hand1 = getHand1(list, [])
+    hand2 = getHand2(list, [])
+    temp = layerOne(hand1, hand2)
+    cond do
+      temp != nil ->
+        if temp == 1 do
+          finalizer2(hand1, [])
+        else
+          finalizer2(hand2, [])
+        end
+      true ->
+        temp = layerTwo(hand1, hand2)
+        cond do
+          temp != nil ->
+            if temp == 1 do
+              finalizer2(hand1, [])
+            else
+              finalizer2(hand2, [])
+            end
+          true ->
+            temp = layerThree(hand1, hand2)
+            cond do
+              temp != nil ->
+                if temp == 1 do
+                  finalizer2(hand1, [])
+                else
+                  finalizer2(hand2, [])
+                end
+              true ->
+                temp = layerFour(hand1, hand2)
+                cond do
+                  temp != nil ->
+                    if temp == 1 do
+                      finalizer2(hand1, [])
+                    else
+                      finalizer2(hand2, [])
+                    end
+                  true ->
+                    if layerFive(hand1, hand2) == 1 do
+                      finalizer2(hand1, [])
+                    else
+                      finalizer2(hand2, [])
+                    end
+                  end
+                end
+              end
+    end
+
+  end
+
+  def layerOne(hand1, hand2) do
+    temp1 = royalFlush(hand1)
+    temp2 = royalFlush(hand2)
+    cond do
+      temp1 == true && temp2 == nil ->
+        1
+      temp2 == true && temp1 == nil ->
+        2
+      temp1 == true && temp2 == true ->
+        temp3 = royalFlushTie(hand1, hand2)
+        if temp3 == 1 do
+          1
+        else
+          2
+        end
+      true ->
+        temp1 = straightFlush(hand1, 13, 0, 0)
+        temp2 = straightFlush(hand2, 13, 0, 0)
+        cond do
+          temp1 == true && temp2 == false ->
+            1
+          temp2 == true && temp1 == false ->
+            2
+          temp1 == true && temp2 == true ->
+            temp3 = straightFlushTie(hand1, hand2)
+            if temp3 == 1 do
+              1
+            else
+              2
+            end
+          true ->
+            nil
+      end
+    end
+  end
+
+  def layerTwo(hand1, hand2) do
+    temp1 = fourKind(hand1)
+    temp2 = fourKind(hand2)
+    cond do
+      temp1 == true && temp2 == nil ->
+        1
+      temp2 == true && temp1 == nil ->
+        2
+      temp1 == true && temp2 == true ->
+        temp3 = fourKindTie(hand1, hand2)
+        if temp3 == 1 do
+          1
+        else
+          2
+        end
+      true ->
+        temp1 = fullHouse(hand1)
+        temp2 = fullHouse(hand2)
+        cond do
+          temp1 == true && temp2 == nil ->
+            1
+          temp2 == true && temp1 == nil ->
+            2
+          temp1 == true && temp2 == true ->
+            temp3 = fullHouseTie(hand1, hand2)
+            if temp3 == 1 do
+              1
+            else
+              2
+            end
+          true ->
+            nil
+      end
+    end
+  end
+
+  def layerFive(hand1, hand2) do
+    temp1 = pair(hand1)
+    temp2 = pair(hand2)
+    cond do
+      temp1 == true && temp2 == false ->
+        1
+      temp2 == true && temp1 == false ->
+        2
+      temp1 == true && temp2 == true ->
+        temp3 = flushTie(hand1, hand2)
+        if temp3 == 1 do
+          1
+        else
+          2
+        end
+      true ->
+        highCard(hand1, hand2)
+    end
+  end
+
+  def layerFour(hand1, hand2) do
+    temp1 = threeKind(hand1)
+    temp2 = threeKind(hand2)
+    cond do
+      temp1 == true && temp2 == false ->
+        1
+      temp2 == true && temp1 == false ->
+        2
+      temp1 == true && temp2 == true ->
+        temp3 = threeKindTie(hand1, hand2)
+        if temp3 == 1 do
+          1
+        else
+          2
+        end
+      true ->
+        temp1 = twoPair(hand1)
+        temp2 = twoPair(hand2)
+        cond do
+          temp1 == true && temp2 == false ->
+            1
+          temp2 == true && temp1 == false ->
+            2
+          temp1 == true && temp2 == true ->
+            temp3 = twoPairTie(hand1, hand2)
+            if temp3 == 1 do
+              1
+            else
+              2
+            end
+          true ->
+            nil
+      end
+    end
+  end
+
+
+  def layerThree(hand1, hand2) do
+    temp1 = flush(hand1)
+    temp2 = flush(hand2)
+    cond do
+      temp1 == true && temp2 == false ->
+        1
+      temp2 == true && temp1 == false ->
+        2
+      temp1 == true && temp2 == true ->
+        temp3 = flushTie(hand1, hand2)
+        if temp3 == 1 do
+          1
+        else
+          2
+        end
+      true ->
+        temp1 = straight(hand1)
+        temp2 = straight(hand2)
+        cond do
+          temp1 == true && temp2 == false ->
+            1
+          temp2 == true && temp1 == false ->
+            2
+          temp1 == true && temp2 == true ->
+            temp3 = straightTie(hand1, hand2)
+            if temp3 == 1 do
+              1
+            else
+              2
+            end
+          true ->
+            nil
+      end
+    end
+  end
+
+  def finalizer(hand) do
+    cond do
+      hand >0 && hand < 14 ->
+        "C"
+      hand >13 && hand < 27 ->
+        "D"
+      hand >26 && hand < 40 ->
+        "H"
+      true ->
+        "S"
+    end
+  end
+
+  def finalizer2([], res), do: res
+  def finalizer2(hand, res) do
+    cond do
+      rem(hd(hand), 13) == 11 ->
+        finalizer2(tl(hand), res ++ ["J"<>finalizer(hd(hand))])
+      rem(hd(hand), 13) == 12 ->
+        finalizer2(tl(hand), res ++ ["Q"<>finalizer(hd(hand))])
+      rem(hd(hand), 13) == 13 ->
+        finalizer2(tl(hand), res ++ ["K"<>finalizer(hd(hand))])
+      true->
+        finalizer2(tl(hand), res ++ [to_string(rem(hd(hand), 13))<>finalizer(hd(hand))])
     end
   end
 
